@@ -8,7 +8,7 @@
 """
 import copy
 import numpy as np
-from genome import (decode, NS, NM, NA, SENSORS, SENSOR_GROUP,
+from genome import (decode, canonical, NS, NM, NA, SENSORS, SENSOR_GROUP,
                     GROUP_MAX_ONSET_DAYS, ACTIONS)
 from world import TPD, DEVICES
 
@@ -70,7 +70,7 @@ class Creature:
         return sd
 
     def load_state_dict(self, sd):
-        assert sd["dna"] == self.dna, "存档的基因组和这个个体不是同一个"
+        assert canonical(sd["dna"]) == canonical(self.dna), "存档的基因组和这个个体不是同一个"
         fresh = set(vars(self)) - set(self._NOT_SAVED)
         missing = fresh - set(sd)
         assert not missing, f"存档缺少字段：{sorted(missing)}"

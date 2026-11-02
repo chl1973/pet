@@ -13,7 +13,7 @@ import sys
 import time
 import numpy as np
 from multiprocessing import Pool
-from genome import random_dna, mutate, crossover
+from genome import random_dna, mutate, crossover, upgrade
 from world import World, TPD
 from creature import Creature
 
@@ -36,8 +36,11 @@ def fitness(args):
 
 
 def main():
-    founder = random_dna(1)
-    if not os.path.exists("c1_0.dna"):
+    # 始祖以 c1_0.dna 为准；基因表追加过新基因时，补成当前版本（新基因取中性值）
+    if os.path.exists("c1_0.dna"):
+        founder = upgrade(open("c1_0.dna").read().strip())
+    else:
+        founder = random_dna(1)
         open("c1_0.dna", "w").write(founder)
     out = sys.argv[1] if len(sys.argv) > 1 else "evolved.dna"
     assert out != "c1.dna", "c1.dna 是 C1 本人的基因组，不要覆盖；新个体请另起文件名"

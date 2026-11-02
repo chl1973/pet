@@ -73,7 +73,7 @@ out["genome"] = dict(dna=dna, founder=founder, length=len(dna),
                      diff=sum(a != b for a, b in zip(dna, founder)),
                      segments=[])
 gi = 0
-for name, shape, lo, hi in SCHEMA:
+for name, shape, *_ in SCHEMA:
     n = int(np.prod(shape)) if shape else 1
     out["genome"]["segments"].append(dict(name=name, start=gi * 4, len=n * 4))
     gi += n

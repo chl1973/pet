@@ -24,7 +24,7 @@ C1 是一个"仿生物"的数字生命：我们只写底层的 DNA（基因组�
 
 | 文件 | 作用 |
 |---|---|
-| `genome.py` | ACGT 基因组：`SCHEMA`、`decode`、`mutate`、`crossover`；感官表 `SENSORS` 和发育分组 `SENSOR_GROUP`；动作表 `ACTIONS` |
+| `genome.py` | ACGT 基因组：`SCHEMA` 与版本边界 `VERSION_ENDS`、`decode`（接受任何版本）、`upgrade`、`canonical`、`mutate`、`crossover`；感官表 `SENSORS` 和发育分组 `SENSOR_GROUP`；动作表 `ACTIONS` |
 | `world.py` | 模拟世界：三台设备 + 云端巢穴、模拟用户作息 `_plan_day`、杂乱产出 `PRODUCE`、`climate`、`eat`、`social`、`digest` |
 | `creature.py` | C1 的身体：感知、化学网络、本能 + actor-critic（资格迹、熵正则）、代谢、发育与表观遗传、孢子 |
 | `evolve.py` | 以 C1-0 为始祖的演化（种群 32，30 代，每代 12 天试活） |
@@ -35,6 +35,7 @@ C1 是一个"仿生物"的数字生命：我们只写底层的 DNA（基因组�
 | `persist.py` | 存档：`save` / `load` 把世界和生命体写进 JSON 再原样读回（保留 numpy 类型，逐 tick 可续跑）；底层是 `World` / `Creature` 的 `state_dict()` / `load_state_dict()` |
 | `tools/oracle.py` | 检验世界是否可生存的手写策略（只用于检验） |
 | `tests/test_core.py` | 回归测试 |
+| `tests/test_genome_versions.py` | 基因组版本兼容：C1 解码指纹、假想第 2 版下旧 DNA 的解码、补齐、演化算子 |
 | `tests/test_persist.py` | 存档测试：中途存档、读回后和不中断时逐 tick 完全一致（含孢子期、多次重启） |
 | `docs/c1-life-report.html` | 上一次 30 天模拟的完整报告，浏览器直接打开 |
 
@@ -57,7 +58,8 @@ python evolve.py evolved.dna   # 演化，双核约 5–6 分钟
 
 ## 已知的坑
 
-- **改 `SCHEMA` 会让 `c1.dna` 失效**：`decode` 会断言长度。追加基因前先实现兼容（见 HANDOFF 优化清单第 2 项）。
+- **`SCHEMA` 只能在末尾追加**，已有条目不改、不删、不挪。追加的基因写成 5 元组 `(名称, 形状, 下限, 上限, 中性值)`，中性值是"让旧个体行为不变"的值（权重类一般是 0），然后在 `VERSION_ENDS` 末尾记下新的条目总数。旧 DNA 解码时新基因正好取中性值（碱基 `GAAA`），旧参数和个体种子逐位不变；`check_schema()` 在导入时检查这些规则，`tests/test_genome_versions.py` 里的指纹会抓到 C1 被改动。
+- **加新感官不只是加基因。** `SENSORS` 变长会改变 `Creature` 里行为网络 `W1` 的输入宽度和随机初值的抽取顺序，C1 的轨迹就变了。要保持 C1 不变，新感官对应的 `W1` 列应补 0、并在旧的随机抽取之后再抽，`U`/`reflex` 的新列用追加的权重基因（中性值 0）。这部分还没做，第一次加真实传感器时要处理。
 - **"去当前所在的设备"等于原地待着**，代价为零。分析行为时用 `observer.derived_actions`，否则会误读成"它总想去手机"。
 - **孢子期吸收垃圾的效率很高。** 适应度必须按活跃时间算，否则演化会选出"装死吸收"的策略。
 - **世界有两条随机数流**：`env_rng`（用户作息、产出）和 `int_rng`（与生命体的交互）。加新的随机行为时，用户侧的随机数必须无条件抽取，否则有无生命体时用户行为会不同，对照组就不可比了（`test_user_behaviour_independent_of_creature` 会抓到）。

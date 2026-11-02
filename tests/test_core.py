@@ -7,7 +7,7 @@ sys.path.insert(0, str(ROOT))
 
 import numpy as np                                     # noqa: E402
 import pytest                                          # noqa: E402
-from genome import (random_dna, decode, mutate, crossover, n_genes,  # noqa: E402
+from genome import (random_dna, decode, mutate, crossover, n_genes, version_of,  # noqa: E402
                     SCHEMA, NS, NM, NA, SENSORS, SENSOR_GROUP)
 from world import World, TPD, DEVICES, digest, MESS_W  # noqa: E402
 from creature import Creature                          # noqa: E402
@@ -17,9 +17,9 @@ C1 = (ROOT / "c1.dna").read_text().strip()
 
 # ---------- 基因组 ----------
 def test_c1_genome_matches_schema():
-    assert len(C1) == n_genes() * 4, "改了 SCHEMA 会让 c1.dna 失效，需要写迁移"
+    assert version_of(C1) == 1
     p = decode(C1)
-    for name, shape, lo, hi in SCHEMA:
+    for name, shape, lo, hi, *_ in SCHEMA:
         v = np.asarray(p[name])
         assert v.shape == (shape if shape else ())
         assert v.min() >= lo - 1e-9 and v.max() <= hi + 1e-9
