@@ -32,14 +32,16 @@ C1 是一个"仿生物"的数字生命：我们只写底层的 DNA（基因组�
 | `observer.py` | 成年期化学状态聚类，按情境、行为、触发事件刻画；`derived_actions` 把"去当前设备"记为 stay |
 | `export.py` → `build.py` | 生成报告页 `report.html`（模板 `report_template.html`，文字 `notes.json`） |
 | `probe.py` | 快速体检：C1 在几个世界里各活 30 天 |
+| `persist.py` | 存档：`save` / `load` 把世界和生命体写进 JSON 再原样读回（保留 numpy 类型，逐 tick 可续跑）；底层是 `World` / `Creature` 的 `state_dict()` / `load_state_dict()` |
 | `tools/oracle.py` | 检验世界是否可生存的手写策略（只用于检验） |
 | `tests/test_core.py` | 回归测试 |
+| `tests/test_persist.py` | 存档测试：中途存档、读回后和不中断时逐 tick 完全一致（含孢子期、多次重启） |
 | `docs/c1-life-report.html` | 上一次 30 天模拟的完整报告，浏览器直接打开 |
 
 ## 常用命令
 
 ```bash
-python -m pytest -q            # 回归测试，约 2 秒
+python -m pytest -q            # 回归测试，约 10 秒（存档测试占大头）
 python tools/oracle.py         # 改了世界规则或代谢常数后先跑这个
 python probe.py 30             # C1 在世界 7/8/9 里的稳定性
 python run.py 30 7             # 30 天 + 对照组（约 5 秒）
@@ -60,5 +62,6 @@ python evolve.py evolved.dna   # 演化，双核约 5–6 分钟
 - **孢子期吸收垃圾的效率很高。** 适应度必须按活跃时间算，否则演化会选出"装死吸收"的策略。
 - **世界有两条随机数流**：`env_rng`（用户作息、产出）和 `int_rng`（与生命体的交互）。加新的随机行为时，用户侧的随机数必须无条件抽取，否则有无生命体时用户行为会不同，对照组就不可比了（`test_user_behaviour_independent_of_creature` 会抓到）。
 - **只靠学习活不下来。** 没有本能时，任何学习参数组合都失败，学得越猛死得越多（见 FINDINGS）。不要指望靠调学习率解决生存问题。
+- **存档会自动带上 `Creature` 实例上的所有字段**（除了 `p`、`rng`、`override`）。新加的字段必须是 `persist.to_tree` 认识的类型（Python 标量、字符串、列表、元组、字典、numpy 数组和标量），否则存档直接报错。`World` 新加字段要手动加进 `World.state_dict()`。改了存档结构就把 `persist.VERSION` 加一。
 - `Creature.override` 只给 `tools/oracle.py` 用，不能用在 C1 身上。
 - 报告模板里的文字在 `notes.json`，数字变了要同步改文字；每句结论都要能在数据里找到出处。

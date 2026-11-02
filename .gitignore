@@ -9,3 +9,5 @@ report_data.json
 /report.html
 evolve.log
 .pytest_cache/
+*.save
+*.save.tmp

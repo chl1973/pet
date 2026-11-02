@@ -8,6 +8,7 @@
 - 能量只由独立的消化模块按客观测得的"混乱减少量"结算；
 - 生命体的学习和演化都改不了这里的任何规则。
 """
+import copy
 import numpy as np
 
 TICK_MIN = 5
@@ -209,3 +210,29 @@ class World:
 
     def total_mess(self):
         return sum(self.h[n].mess() for n in DEVICES)
+
+    # ---------- 存档与恢复 ----------
+    def state_dict(self):
+        """世界的完整状态（深拷贝），包括两条随机数流。存档后世界继续跑不会改动它。"""
+        return dict(
+            env_rng=copy.deepcopy(self.env_rng.bit_generator.state),
+            int_rng=copy.deepcopy(self.int_rng.bit_generator.state),
+            t=self.t,
+            h={n: copy.deepcopy(vars(h)) for n, h in self.h.items()},
+            new_files=dict(self.new_files),
+            plan=copy.deepcopy(self.plan),
+            log=dict(self.log),
+        )
+
+    def load_state_dict(self, sd):
+        self.env_rng.bit_generator.state = copy.deepcopy(sd["env_rng"])
+        self.int_rng.bit_generator.state = copy.deepcopy(sd["int_rng"])
+        self.t = sd["t"]
+        assert set(sd["h"]) == set(HABITATS), "存档里的栖息地和当前世界不一致"
+        for n, hv in sd["h"].items():
+            missing = set(vars(self.h[n])) - set(hv)
+            assert not missing, f"存档缺少栖息地字段：{missing}"
+            vars(self.h[n]).update(copy.deepcopy(hv))
+        self.new_files = dict(sd["new_files"])
+        self.plan = copy.deepcopy(sd["plan"])
+        self.log = dict(sd["log"])

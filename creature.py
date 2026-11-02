@@ -6,6 +6,7 @@
 体内有 8 种无名化学物质 m0..m7，按基因组给的调控网络自己演化。
 它们影响：行为选择、行为的随机性、学习快慢、额外能耗、体色和动作节奏。
 """
+import copy
 import numpy as np
 from genome import (decode, NS, NM, NA, SENSORS, SENSOR_GROUP,
                     GROUP_MAX_ONSET_DAYS, ACTIONS)
@@ -55,6 +56,35 @@ class Creature:
         self.event = ""
         self._reset_traces()
         self.D_prev = self.drive()
+
+    # ---------- 存档与恢复 ----------
+    # 不进存档的：p 由 dna 解码得到；rng 单独存状态；override 只给 tools/oracle.py 用。
+    _NOT_SAVED = ("p", "rng", "override")
+
+    def state_dict(self):
+        """这条生命的完整状态（深拷贝）：化学浓度、行为网络权重、资格迹、发育与表观遗传标记、
+        孢子状态、随机数状态……除了上面几项，实例上的每个字段都会自动进存档，
+        以后加新字段不会被漏掉。"""
+        sd = {k: copy.deepcopy(v) for k, v in vars(self).items() if k not in self._NOT_SAVED}
+        sd["rng"] = copy.deepcopy(self.rng.bit_generator.state)
+        return sd
+
+    def load_state_dict(self, sd):
+        assert sd["dna"] == self.dna, "存档的基因组和这个个体不是同一个"
+        fresh = set(vars(self)) - set(self._NOT_SAVED)
+        missing = fresh - set(sd)
+        assert not missing, f"存档缺少字段：{sorted(missing)}"
+        for k, v in sd.items():
+            if k == "rng":
+                self.rng.bit_generator.state = copy.deepcopy(v)
+            elif k not in self._NOT_SAVED:
+                setattr(self, k, copy.deepcopy(v))
+
+    @classmethod
+    def from_state_dict(cls, sd):
+        c = cls(sd["name"], sd["dna"], learn=sd["learn"])
+        c.load_state_dict(sd)
+        return c
 
     def _reset_traces(self):
         self.za_W1, self.za_W2 = np.zeros_like(self.W1), np.zeros_like(self.W2)
