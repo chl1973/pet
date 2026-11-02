@@ -1,0 +1,11 @@
+# 运行产物（都可以重新生成）
+__pycache__/
+*.pyc
+log_*.npz
+summary_*.json
+states.json
+state_labels.npy
+report_data.json
+/report.html
+evolve.log
+.pytest_cache/

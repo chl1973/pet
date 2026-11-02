@@ -1,0 +1,589 @@
+<title>C1 生命记录</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+/* 布局：单栏的野外观察记录。顶部左侧是结论，右侧是 C1 一生的回放；图表满宽，状态卡两列。 */
+:root{
+  --h: __HUE__;                      /* C1 平均体色的色相，来自它自己的表型基因 */
+  --bg:#f2f4f1; --panel:#fafbf9; --ink:#111915; --ink2:#47524c; --muted:#737c76;
+  --rule:#dce1dc; --axis:#bfc7c0; --faint:#e8ece7;
+  --accent:oklch(0.5 0.13 var(--h)); --accent-wash:oklch(0.5 0.13 var(--h) / 0.12);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --nest:#bcc4bd; --transit:#dfe4de; --spore:#111915; --crit:#d03b3b;
+  --night:rgba(17,25,21,.06); --blobL:52%;
+  --display:"Noto Serif SC","Songti SC","STSong",serif;
+  --body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1210; --panel:#141a17; --ink:#e7ece8; --ink2:#b6c0ba; --muted:#8a938d;
+  --rule:#26302b; --axis:#3a463f; --faint:#1b221e;
+  --accent:oklch(0.74 0.12 var(--h)); --accent-wash:oklch(0.74 0.12 var(--h) / 0.14);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --nest:#46504a; --transit:#2a332e; --spore:#e7ece8; --crit:#e66767;
+  --night:rgba(0,0,0,.28); --blobL:62%; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1210; --panel:#141a17; --ink:#e7ece8; --ink2:#b6c0ba; --muted:#8a938d;
+  --rule:#26302b; --axis:#3a463f; --faint:#1b221e;
+  --accent:oklch(0.74 0.12 var(--h)); --accent-wash:oklch(0.74 0.12 var(--h) / 0.14);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --nest:#46504a; --transit:#2a332e; --spore:#e7ece8; --crit:#e66767;
+  --night:rgba(0,0,0,.28); --blobL:62%; color-scheme:dark}
+
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding-block:44px 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:64px}
+h1,h2,h3{font-family:var(--display);font-weight:700;text-wrap:balance;margin:0;line-height:1.3}
+h1{font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.02em}
+h2{font-size:1.55rem}
+h3{font-size:1.1rem}
+p{margin:0;max-width:66ch}
+.eyebrow,.cap{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.ink2{color:var(--ink2)}
+section{display:flex;flex-direction:column;gap:18px}
+.sec-head{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);padding-top:20px}
+
+/* 顶部 */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:40px;align-items:start}
+.hero-text{display:flex;flex-direction:column;gap:18px;min-width:0}
+.lede{font-size:1.06rem;color:var(--ink2)}
+.tag{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;margin:6px 0 0;padding:14px 16px;border:1px solid var(--rule);border-radius:6px;background:var(--panel)}
+.tag div{display:flex;flex-direction:column;min-width:0}
+.tag dt{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted)}
+.tag dd{margin:0;font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.replay{margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+.replay canvas{width:100%;height:auto;aspect-ratio:4/3;max-width:100%;border:1px solid var(--rule);border-radius:8px;background:var(--panel);display:block}
+.replay-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.replay-cap{font-family:var(--mono);font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums;flex:1 1 220px;min-width:0}
+button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--axis);border-radius:999px;padding:4px 14px;cursor:pointer}
+button:hover{border-color:var(--ink2)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+/* 结论 */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:20px}
+.stat{display:flex;flex-direction:column;gap:4px;border-top:2px solid var(--ink);padding-top:12px}
+.stat .v{font-family:var(--display);font-size:2.3rem;font-weight:700;line-height:1.1}
+.stat .l{font-size:13.5px;color:var(--ink2)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{padding:10px 14px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.05em;color:var(--muted)}
+tbody td{font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:0}
+tr.me td{font-weight:700}
+.note{font-size:13.5px;color:var(--muted)}
+
+/* 图 */
+.panel{border:1px solid var(--rule);border-radius:8px;background:var(--panel);padding:16px 16px 10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink2)}
+.key{display:inline-flex;align-items:center;gap:7px}
+.key i{display:inline-block;width:16px;height:3px;border-radius:2px}
+.key i.sq{width:10px;height:10px;border-radius:2px}
+.plot{width:100%;min-width:0}
+.plot svg{display:block;overflow:visible}
+.tick{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.acto canvas{display:block;width:100%;touch-action:pan-y}
+#tip{position:fixed;z-index:20;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--axis);border-radius:6px;padding:8px 10px;font-size:12.5px;line-height:1.55;box-shadow:0 6px 20px rgba(0,0,0,.12);max-width:260px}
+#tip b{font-family:var(--mono);font-weight:500}
+#tip .row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+#tip .row span:first-child{display:inline-flex;align-items:center;gap:6px;color:var(--ink2)}
+#tip i{display:inline-block;width:8px;height:8px;border-radius:50%}
+
+/* 状态卡 */
+.method{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.method div{border-left:2px solid var(--accent);padding-left:12px;font-size:14px;color:var(--ink2)}
+.method b{display:block;color:var(--ink);font-family:var(--mono);font-size:18px;font-weight:500}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{border:1px solid var(--rule);border-radius:8px;background:var(--panel);padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.card-head .letter{font-family:var(--display);font-size:1.9rem;font-weight:700;line-height:1;color:var(--accent)}
+.card-head .meta{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.reading{font-size:14.5px;border-left:2px solid var(--accent);padding-left:12px}
+.reading .who{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted)}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px}
+.kv div{display:flex;flex-direction:column;min-width:0}
+.kv span{font-size:12px;color:var(--muted)}
+.kv b{font-family:var(--mono);font-weight:500;font-size:14px;font-variant-numeric:tabular-nums}
+.kv b.hi{color:var(--accent)}
+.bars{display:flex;flex-direction:column;gap:5px}
+.bar{display:grid;grid-template-columns:7.5em minmax(0,1fr) 3.2em;align-items:center;gap:8px;font-size:12.5px;color:var(--ink2)}
+.bar .track{height:8px;background:var(--faint);border-radius:4px;overflow:hidden}
+.bar .fill{height:100%;background:var(--ink2);border-radius:0 4px 4px 0}
+.bar .fill.top{background:var(--accent)}
+.bar em{font-style:normal;font-family:var(--mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;border:1px solid var(--axis);border-radius:999px;padding:2px 10px;color:var(--ink2)}
+.chip b{font-family:var(--mono);font-weight:500;color:var(--ink)}
+.sub{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted)}
+
+/* 基因组 */
+.dna{font-family:var(--mono);font-size:12px;line-height:1.9;max-height:380px;overflow:auto;border:1px solid var(--rule);border-radius:6px;background:var(--panel);padding:14px 16px;word-break:break-all;color:var(--ink2)}
+.dna .seg{display:block;margin-bottom:10px}
+.dna .seg-name{display:block;color:var(--ink);font-size:11px;letter-spacing:.05em}
+.dna .mut{background:var(--accent-wash);color:var(--accent);border-radius:2px}
+.limits{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
+.limits li{display:grid;grid-template-columns:7em minmax(0,1fr);gap:16px;border-top:1px solid var(--rule);padding-top:12px}
+.limits li b{font-weight:500}
+.limits li p{color:var(--ink2)}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr}
+  .two,.cards{grid-template-columns:1fr}
+  .wrap{gap:52px}
+}
+@media (max-width:480px){
+  .kv{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .limits li{grid-template-columns:1fr;gap:4px}
+  .stat .v{font-size:2rem}
+}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="hero-text">
+      <p class="eyebrow" id="eyebrow"></p>
+      <h1>C1 生命记录</h1>
+      <p class="lede" id="lede"></p>
+      <dl class="tag" id="tag"></dl>
+    </div>
+    <figure class="replay">
+      <canvas id="replay" width="800" height="600" aria-label="C1 三十天生活的回放：三台设备和云端巢穴，C1 在其间移动"></canvas>
+      <div class="replay-bar">
+        <span class="replay-cap" id="replay-cap"></span>
+        <button id="replay-toggle" type="button">暂停</button>
+      </div>
+      <label class="sub" for="scrub">拖动查看任意时刻</label>
+      <input type="range" id="scrub" min="0" value="0">
+    </figure>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">结论</span>
+      <h2 id="verdict-title"></h2>
+      <p class="ink2" id="verdict-text"></p>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="tablewrap"><table id="compare"></table></div>
+    <p class="note" id="compare-note"></p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">能量 · 每小时均值</span>
+      <h2>能量曲线</h2>
+      <p class="ink2" id="energy-text"></p>
+    </div>
+    <div class="panel" id="energy"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">三台设备的杂乱度合计</span>
+      <h2>它让设备变整洁了吗</h2>
+      <p class="ink2" id="mess-text"></p>
+    </div>
+    <div class="panel" id="mess"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">活动谱 · 每行一天，每格 5 分钟</span>
+      <h2>它每天待在哪里</h2>
+      <p class="ink2" id="acto-text"></p>
+    </div>
+    <div class="panel acto" id="acto"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">发育</span>
+      <h2>感官怎样一个个打开</h2>
+      <p class="ink2" id="dev-text"></p>
+    </div>
+    <div class="two">
+      <div class="panel" id="expr"></div>
+      <div class="panel" id="size"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">观察者 · 事后命名</span>
+      <h2>长出来的状态</h2>
+      <p class="ink2" id="states-text"></p>
+    </div>
+    <div class="method" id="method"></div>
+    <p class="ink2" id="states-cycle"></p>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">演化 · 以 C1-0 为始祖</span>
+      <h2>C1 是怎么来的</h2>
+      <p class="ink2" id="evo-text"></p>
+    </div>
+    <div class="panel" id="evo"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">基因组 · 我们掌控的部分</span>
+      <h2>C1 的 DNA</h2>
+      <p class="ink2" id="dna-text"></p>
+    </div>
+    <div class="dna" id="dna" tabindex="0" aria-label="C1 的完整碱基序列"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">边界</span>
+      <h2>这次没有验证的</h2>
+    </div>
+    <ul class="limits" id="limits"></ul>
+  </section>
+</div>
+<div id="tip" hidden></div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script id="notes" type="application/json">__NOTES__</script>
+<script>
+(function(){
+const D = JSON.parse(document.getElementById('data').textContent);
+const N = JSON.parse(document.getElementById('notes').textContent);
+const TPD = 288, T = D.acto.length, HOURS = D.energy.C1.length;
+const $ = id => document.getElementById(id);
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const LOC = ['笔记本','台式机','手机','云端巢穴','迁徙中','孢子'];
+const LOCV = ['--s1','--s2','--s3','--nest','--transit','--spore'];
+const ACT = {rest:'休息',eat_quick:'用嘴吃',eat_careful:'用手处理',hide:'躲开光标',approach:'凑近光标',go_laptop:'去笔记本',go_desktop:'去台式机',go_phone:'去手机',stay:'原地待着'};
+const WD = ['一','二','三','四','五','六','日'];
+const L = 'ABCDEF';
+const pct = v => Math.round(v*100) + '%';
+const hhmm = t => { const m = (t % TPD) * 5; return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); };
+const dayLabel = t => `第 ${Math.floor(t/TPD)+1} 天 · 周${WD[Math.floor(t/TPD)%7]}`;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const redraws = [];
+const onTheme = () => redraws.forEach(f => f());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
+new MutationObserver(onTheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+/* ---------- 提示框 ---------- */
+const tip = $('tip');
+function showTip(html, x, y){
+  tip.innerHTML = html; tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  let left = x + 14, top = y + 14;
+  if (left + r.width > innerWidth - 8) left = x - r.width - 14;
+  if (top + r.height > innerHeight - 8) top = y - r.height - 14;
+  tip.style.left = Math.max(8, left) + 'px'; tip.style.top = Math.max(8, top) + 'px';
+}
+const hideTip = () => { tip.hidden = true; };
+const row = (color, name, val) => `<div class="row"><span>${color ? `<i style="background:var(${color})"></i>` : ''}${name}</span><b>${val}</b></div>`;
+
+/* ---------- 折线图 ---------- */
+function lineChart(el, o){
+  if (o.series.length > 1 || o.keys){
+    const lg = document.createElement('div'); lg.className = 'legend';
+    o.series.forEach(s => lg.insertAdjacentHTML('beforeend', `<span class="key"><i style="background:var(${s.color})"></i>${s.name}</span>`));
+    (o.keys || []).forEach(k => lg.insertAdjacentHTML('beforeend', `<span class="key"><i class="sq" style="background:var(${k.color})"></i>${k.name}</span>`));
+    el.append(lg);
+  }
+  const box = document.createElement('div'); box.className = 'plot'; el.append(box);
+  let lastW = 0;
+  function draw(force){
+    const W = Math.max(260, box.clientWidth); if (!force && W === lastW) return; lastW = W;
+    const H = o.height || 230, m = {l:46, r:14, t:10, b:26}, iw = W - m.l - m.r, ih = H - m.t - m.b, n = o.series[0].values.length;
+    const X = i => m.l + i / (n - 1) * iw, Y = v => m.t + ih - (Math.max(o.yMin, Math.min(o.yMax, v)) - o.yMin) / (o.yMax - o.yMin) * ih;
+    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.label}">`;
+    (o.bands || []).forEach(b => { s += `<rect x="${X(b[0]).toFixed(1)}" y="${m.t}" width="${Math.max(1, X(b[1]) - X(b[0])).toFixed(1)}" height="${ih}" fill="var(${b[2] || '--accent-wash'})"/>`; });
+    o.yTicks.forEach(v => { s += `<line x1="${m.l}" x2="${m.l + iw}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)" stroke-width="1"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end" class="tick">${o.yFmt(v)}</text>`; });
+    const minGap = 34; let lastX = -1e9;
+    for (let i = 0; i < n; i++){ const lab = o.xTick(i); if (lab != null && X(i) - lastX >= minGap){ s += `<text x="${X(i)}" y="${H - 6}" text-anchor="middle" class="tick">${lab}</text>`; lastX = X(i); } }
+    s += `<line x1="${m.l}" x2="${m.l + iw}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--axis)" stroke-width="1"/>`;
+    o.series.forEach(se => {
+      const step = Math.max(1, Math.floor(n / (iw * 1.5)));
+      const pts = []; for (let i = 0; i < n; i += step) pts.push(`${X(i).toFixed(1)},${Y(se.values[i]).toFixed(1)}`);
+      pts.push(`${X(n-1).toFixed(1)},${Y(se.values[n-1]).toFixed(1)}`);
+      s += `<polyline points="${pts.join(' ')}" fill="none" stroke="var(${se.color})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    });
+    s += `<line class="cross" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>`;
+    o.series.forEach((se, k) => { s += `<circle class="dot" data-k="${k}" r="4" fill="var(${se.color})" stroke="var(--panel)" stroke-width="2" visibility="hidden"/>`; });
+    s += `<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" class="hit"/></svg>`;
+    box.innerHTML = s;
+    const svg = box.firstChild, cross = svg.querySelector('.cross'), dots = svg.querySelectorAll('.dot');
+    const move = e => {
+      const r = svg.getBoundingClientRect(), i = Math.round((e.clientX - r.left - m.l) / iw * (n - 1));
+      if (i < 0 || i >= n){ leave(); return; }
+      cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('visibility', 'visible');
+      dots.forEach((d, k) => { d.setAttribute('cx', X(i)); d.setAttribute('cy', Y(o.series[k].values[i])); d.setAttribute('visibility', 'visible'); });
+      showTip(`<b>${o.tipTitle(i)}</b>` + o.series.map(se => row(se.color, se.name, o.tipFmt(se.values[i]))).join('') + (o.tipExtra ? o.tipExtra(i) : ''), e.clientX, e.clientY);
+    };
+    const leave = () => { cross.setAttribute('visibility', 'hidden'); dots.forEach(d => d.setAttribute('visibility', 'hidden')); hideTip(); };
+    svg.addEventListener('pointermove', move); svg.addEventListener('pointerleave', leave);
+  }
+  draw(true);
+  new ResizeObserver(() => requestAnimationFrame(() => draw(false))).observe(box);
+}
+
+/* ---------- 活动谱（每行一天） ---------- */
+function actogram(el, o){
+  const cv = document.createElement('canvas'); el.append(cv);
+  const days = Math.floor(o.codes.length / TPD), rowH = o.rowH, gutter = o.gutter ?? 54, top = o.top ?? 20;
+  let geo = null;
+  function draw(){
+    const W = Math.max(260, el.clientWidth - (o.inset || 0)), H = top + days * rowH + 4, dpr = devicePixelRatio || 1;
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+    const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+    const cw = (W - gutter - 4) / TPD; geo = {cw, W, H};
+    const cols = {}; const colorOf = ch => cols[ch] ?? (cols[ch] = o.color(ch));
+    for (let d = 0; d < days; d++){
+      const y = top + d * rowH; let run = 0;
+      for (let t = 1; t <= TPD; t++){
+        const a = o.codes[d * TPD + run], b = t < TPD ? o.codes[d * TPD + t] : null;
+        if (b !== a){ const col = colorOf(a); if (col){ c.fillStyle = col; c.fillRect(gutter + run * cw, y + 0.5, (t - run) * cw + 0.3, rowH - 1); } run = t; }
+      }
+    }
+    c.font = '11px ' + cssv('--mono'); c.fillStyle = cssv('--muted'); c.textBaseline = 'middle';
+    if (o.hourAxis !== false){
+      c.textAlign = 'center';
+      [0, 6, 12, 18, 24].forEach(h => { const x = gutter + h * 12 * cw; c.fillText(String(h).padStart(2, '0') + ':00', Math.min(W - 18, Math.max(gutter + 18, x)), 9); });
+    }
+    if (o.dayAxis !== false){
+      c.textAlign = 'right';
+      for (let d = 0; d < days; d++){
+        const wk = d % 7 >= 5;
+        if (d % 5 === 0 || d === days - 1) c.fillText('第' + (d + 1) + '天', gutter - (wk ? 14 : 6), top + d * rowH + rowH / 2);
+        if (wk){ c.fillStyle = cssv('--axis'); c.fillRect(gutter - 8, top + d * rowH + 1, 3, rowH - 2); c.fillStyle = cssv('--muted'); }
+      }
+    }
+  }
+  draw(); redraws.push(draw);
+  new ResizeObserver(() => requestAnimationFrame(draw)).observe(el);
+  if (o.tip){
+    cv.addEventListener('pointermove', e => {
+      const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      const d = Math.floor((y - top) / rowH), k = Math.floor((x - gutter) / geo.cw);
+      if (d < 0 || d >= days || k < 0 || k >= TPD){ hideTip(); return; }
+      showTip(o.tip(d * TPD + k), e.clientX, e.clientY);
+    });
+    cv.addEventListener('pointerleave', hideTip);
+  }
+}
+
+/* ---------- 文字与表格 ---------- */
+const S = D.summary, C = S.C1, st = D.states;
+$('eyebrow').textContent = N.eyebrow;
+$('lede').textContent = N.lede;
+const tags = [['代数', N.generation], ['基因组', D.genome.length + ' 个碱基'], ['与始祖不同', D.genome.diff + ' 个碱基'], ['观察时长', D.days + ' 天（' + T + ' 个 5 分钟）'], ['世界', N.world], ['最终体型', C.final_size.toFixed(2) + '（出生 0.60）']];
+$('tag').innerHTML = tags.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+$('verdict-title').textContent = N.verdict_title;
+$('verdict-text').textContent = N.verdict_text;
+const active = k => 1 - S[k].spore_frac;
+const eaten = k => S[k].eaten.temp + S[k].eaten.dup + S[k].eaten.sorted;
+const messCut = 1 - S.C1.mean_mess_last14d / S.baseline.mean_mess_last14d;
+$('stats').innerHTML = [
+  [pct(active('C1')), '的时间处于活跃状态，没有饿到休眠'],
+  [String(C.spores), '次饿到结孢子（30 天）'],
+  [pct(messCut), '后两周设备杂乱比没有它时少'],
+  [String(C.world_log.compost_valuable), `次把有用文件误放进回收堆，用户找回了 ${C.world_log.restored} 次`],
+].map(([v, l]) => `<div class="stat"><span class="v">${v}</span><span class="l">${l}</span></div>`).join('');
+const runs = [['C1', 'C1（演化后，会学习）'], ['C1_nolearn', 'C1 同卵兄弟（无学习）'], ['C1_0', '始祖 C1-0（会学习）'], ['baseline', '空白世界（没有生命体）']];
+$('compare').innerHTML = '<thead><tr><th>个体</th><th>活跃时间</th><th>结孢子</th><th>吃掉的杂乱</th><th>用手整理</th><th>误吞有用文件</th><th>后两周平均杂乱</th></tr></thead><tbody>' +
+  runs.map(([k, n]) => { const s = S[k], has = k !== 'baseline';
+    return `<tr class="${k === 'C1' ? 'me' : ''}"><td>${n}</td><td>${has ? pct(active(k)) : '—'}</td><td>${has ? s.spores + ' 次' : '—'}</td><td>${has ? eaten(k) + ' 件' : '—'}</td><td>${has ? s.eaten.sorted + ' 件' : '—'}</td><td>${has ? s.world_log.compost_valuable + ' 次' : '—'}</td><td>${s.mean_mess_last14d.toFixed(0)}</td></tr>`; }).join('') + '</tbody>';
+$('compare-note').textContent = N.compare_note;
+
+/* 能量 */
+$('energy-text').textContent = N.energy_text;
+const dayTick = i => (i % 24 === 0 ? '第' + (i / 24 + 1) + '天' : null);
+lineChart($('energy'), {
+  label: 'C1 与始祖 C1-0 的能量（占上限比例），每小时均值', height: 240,
+  series: [{name: 'C1', color: '--s1', values: D.energy.C1}, {name: '始祖 C1-0', color: '--s2', values: D.energy.C1_0}],
+  yMin: 0, yMax: 1, yTicks: [0, .25, .5, .75, 1], yFmt: v => pct(v), xTick: dayTick,
+  tipTitle: i => dayLabel(i * 12) + ' ' + hhmm(i * 12), tipFmt: v => pct(v),
+  tipExtra: i => (D.spore_h.C1[i] > 0 ? row('', 'C1 处于孢子', pct(D.spore_h.C1[i]) + ' 时间') : '') + (D.spore_h.C1_0[i] > 0 ? row('', 'C1-0 处于孢子', pct(D.spore_h.C1_0[i]) + ' 时间') : '')
+});
+
+/* 杂乱 */
+$('mess-text').textContent = N.mess_text;
+const messMax = Math.max(...D.mess.baseline, ...D.mess.C1_0, ...D.mess.C1_nolearn);
+const mTop = Math.ceil(messMax / 250) * 250;
+lineChart($('mess'), {
+  label: '三台设备杂乱度合计：空白世界、C1、无学习兄弟、始祖', height: 250,
+  series: [{name: '空白世界', color: '--s1', values: D.mess.baseline}, {name: 'C1', color: '--s2', values: D.mess.C1}, {name: '无学习兄弟', color: '--s3', values: D.mess.C1_nolearn}, {name: '始祖 C1-0', color: '--s4', values: D.mess.C1_0}],
+  yMin: 0, yMax: mTop, yTicks: Array.from({length: mTop / 250 + 1}, (_, i) => i * 250), yFmt: v => v.toLocaleString('zh-CN'), xTick: dayTick,
+  tipTitle: i => dayLabel(i * 12) + ' ' + hhmm(i * 12), tipFmt: v => Math.round(v).toLocaleString('zh-CN')
+});
+
+/* 活动谱 */
+$('acto-text').textContent = N.acto_text;
+const actoEl = $('acto');
+actoEl.insertAdjacentHTML('beforeend', '<div class="legend">' + LOC.map((n, i) => `<span class="key"><i class="sq" style="background:var(${LOCV[i]})"></i>${n}</span>`).join('') + '<span class="key"><i class="sq" style="background:var(--axis);width:3px"></i>周末</span></div>');
+const actoBox = document.createElement('div'); actoEl.append(actoBox);
+const stateName = s => s === '-' ? '—' : '状态 ' + L[+s];
+actogram(actoBox, {codes: D.acto, rowH: 10, color: ch => cssv(LOCV[+ch]),
+  tip: t => `<b>${dayLabel(t)} ${hhmm(t)}</b>` + row(LOCV[+D.acto[t]], '位置', LOC[+D.acto[t]]) + row('', '动作', D.acto_action[t] === '-' ? '—' : ACT[D.actions[+D.acto_action[t]]]) + row('', '化学状态', stateName(D.acto_state[t])) + row('', '用户在用设备', ['笔记本', '台式机', '手机'].filter((_, i) => D.user_dev[i][t] === '1').join('、') || '无')});
+
+/* 发育 */
+$('dev-text').textContent = N.dev_text;
+const cpH = D.cp_end_days * 24;
+lineChart($('expr'), {
+  label: '出生后 7 天内四组感官的表达程度', height: 220,
+  series: [{name: '环境感官', color: '--s1', values: D.expr[0]}, {name: '对用户的感官', color: '--s2', values: D.expr[1]}, {name: '远处食物记忆', color: '--s3', values: D.expr[2]}, {name: '昼夜节律', color: '--s4', values: D.expr[3]}],
+  keys: [{name: '敏感期', color: '--accent-wash'}], bands: [[0, cpH]],
+  yMin: 0, yMax: 1, yTicks: [0, .5, 1], yFmt: v => pct(v), xTick: i => (i % 24 === 0 ? '第' + (i / 24 + 1) + '天' : null),
+  tipTitle: i => '出生后 ' + (i / 24).toFixed(1) + ' 天', tipFmt: v => pct(v)
+});
+const sz = D.size, szMax = Math.ceil(Math.max(...sz) * 10) / 10;
+lineChart($('size'), {
+  label: 'C1 体型变化', height: 220,
+  series: [{name: '体型', color: '--accent', values: sz}],
+  yMin: 0.5, yMax: Math.max(1.5, szMax), yTicks: [0.5, 1, 1.5].filter(v => v <= Math.max(1.5, szMax)), yFmt: v => v.toFixed(1), xTick: i => (i % 120 === 0 ? '第' + (i / 24 + 1) + '天' : null),
+  tipTitle: i => dayLabel(i * 12) + ' ' + hhmm(i * 12), tipFmt: v => v.toFixed(3)
+});
+$('size').insertAdjacentHTML('afterbegin', '<span class="sub">体型（出生 0.60，能量上限 = 100 × 体型）</span>');
+$('expr').insertAdjacentHTML('afterbegin', '<span class="sub">感官表达程度</span>');
+
+/* 状态 */
+$('states-text').textContent = N.states_text;
+$('method').innerHTML = N.method.map(m => `<div><b>${m.v}</b>${m.l}</div>`).join('');
+$('states-cycle').textContent = N.states_cycle;
+const cards = $('cards');
+st.states.forEach((s, k) => {
+  const nn = N.states[k] || {};
+  const card = document.createElement('article'); card.className = 'card';
+  const top = s.actions.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]);
+  const trig = Object.entries(st.triggers).map(([ev, d]) => [ev, d.lift[k], d.n]).filter(x => x[1] >= 1.4 && x[2] >= 5).sort((a, b) => b[1] - a[1]);
+  const EVN = {rough: '被粗暴拖拽后', toxic: '误吞有用文件后', evicted: '设备关机被弹回巢穴后', arrived: '刚抵达一台设备', task: '用户塞来任务后', cursor: '光标刚靠近时'};
+  const peakH = s.hours.indexOf(Math.max(...s.hours));
+  const mainLoc = s.locs.indexOf(Math.max(...s.locs));
+  card.innerHTML = `
+    <div class="card-head"><span class="letter">${L[k]}</span><h3>${nn.name || ''}</h3><span class="meta">占成年期 ${pct(s.share)} · 每次平均持续 ${Math.round(s.dwell_min)} 分钟</span></div>
+    <p class="reading"><span class="who">观察者的初步解读</span>${nn.reading || ''}</p>
+    <div><span class="sub">什么时候出现</span><div class="mini"></div></div>
+    <div class="kv">
+      <div><span>饥饿</span><b>${pct(s.hunger)}</b></div>
+      <div><span>伤痛</span><b>${pct(s.damage)}</b></div>
+      <div><span>用户在场</span><b>${pct(s.user)}</b></div>
+      <div><span>光标靠近</span><b>${pct(s.cursor)}</b></div>
+      <div><span>最常在</span><b>${['笔记本','台式机','手机','巢穴','迁徙中'][mainLoc]}</b></div>
+      <div><span>最常见时段</span><b>${String(peakH).padStart(2, '0')}:00</b></div>
+    </div>
+    <div class="bars"><span class="sub">这个状态下做什么</span>${top.slice(0, 5).map(([v, i], j) => `<div class="bar"><span>${ACT[D.actions[i]]}</span><div class="track"><div class="fill ${j === 0 ? 'top' : ''}" style="width:${(v * 100).toFixed(1)}%"></div></div><em>${pct(v)}</em></div>`).join('')}</div>
+    ${trig.length ? `<div class="chips"><span class="sub" style="width:100%">更容易在这些事之后出现</span>${trig.slice(0, 4).map(([ev, lift, n]) => `<span class="chip">${EVN[ev]} <b>×${lift.toFixed(1)}</b></span>`).join('')}</div>` : ''}`;
+  cards.append(card);
+  actogram(card.querySelector('.mini'), {codes: D.acto_state, rowH: 4, gutter: 4, top: 14, inset: 0, dayAxis: false,
+    color: ch => ch === String(k) ? cssv('--accent') : (ch === '-' ? null : cssv('--faint')),
+    tip: t => `<b>${dayLabel(t)} ${hhmm(t)}</b>` + row('', '化学状态', stateName(D.acto_state[t])) + row('', '位置', LOC[+D.acto[t]])});
+});
+
+/* 演化 */
+$('evo-text').textContent = N.evo_text;
+lineChart($('evo'), {
+  label: '每一代的最佳与平均适应度', height: 220,
+  series: [{name: '每代最佳', color: '--s1', values: D.evolution.map(g => g.best)}, {name: '每代平均', color: '--s2', values: D.evolution.map(g => g.mean)}],
+  yMin: 0, yMax: 1.2, yTicks: [0, .4, .8, 1.2], yFmt: v => v.toFixed(1), xTick: i => (i % 5 === 0 ? '第' + i + '代' : null),
+  tipTitle: i => '第 ' + i + ' 代', tipFmt: v => v.toFixed(3),
+  tipExtra: i => row('', '最佳个体活跃时间', pct(D.evolution[i].best_active)) + row('', '平均活跃时间', pct(D.evolution[i].mean_active))
+});
+
+/* 基因组 */
+$('dna-text').textContent = N.dna_text;
+const SEG = {W: '化学物质之间的调控网络', U: '感官 → 化学物质', bias: '化学物质基线', rate: '化学物质更新速度', arousal_cost: '化学活跃的能耗', temp_gate: '化学 → 行为随机性', lr_gate: '化学 → 学习速度', hue_gate: '化学 → 体色', speed_gate: '化学 → 动作节奏', onset: '感官开启时间', cp_end_days: '敏感期长度', epi_k: '早期经历的改写强度', base_lr: '学习速度', gamma: '对未来的重视', base_tau: '天生的随机性', mouth_acc: '嘴的分辨力', growth: '生长潜力', pain_gain: '疼痛敏感度', init_scale: '行为网络初值幅度', reflex: '本能：感官 → 动作', reflex_bias: '本能：动作基线', chem_act: '本能：化学 → 动作'};
+const g = D.genome;
+$('dna').innerHTML = g.segments.map(sg => {
+  let h = '';
+  for (let i = sg.start; i < sg.start + sg.len; i++){ const ch = g.dna[i]; h += ch !== g.founder[i] ? `<span class="mut">${ch}</span>` : ch; }
+  return `<span class="seg"><span class="seg-name">${sg.name} · ${SEG[sg.name] || ''} · ${sg.len} 碱基</span>${h}</span>`;
+}).join('');
+
+/* 限制 */
+$('limits').innerHTML = N.limits.map(l => `<li><b>${l.t}</b><p>${l.d}</p></li>`).join('');
+
+/* ---------- 回放 ---------- */
+const cv = $('replay'), ctx = cv.getContext('2d'), scrub = $('scrub'), cap = $('replay-cap'), btn = $('replay-toggle');
+scrub.max = T - 1;
+let tick = N.replay_start || 0, playing = !reduce, last = performance.now(), pos = null;
+const TPS = 72;   // 每秒回放 72 个 tick，整段约两分钟
+function boxes(W, H){
+  const pad = W * 0.04, bw = (W - pad * 4) / 3, bh = H * 0.42, y = H * 0.1;
+  const b = [0, 1, 2].map(i => ({x: pad + i * (bw + pad), y, w: bw, h: bh}));
+  b.push({x: W * 0.3, y: H * 0.66, w: W * 0.4, h: H * 0.24});
+  return b;
+}
+function hash(i){ const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+function frame(){
+  const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+  if (cv.width !== Math.round(W * dpr)){ cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const t = Math.min(T - 1, Math.floor(tick)), hr = Math.floor(t / 12), hour = (t % TPD) / 12;
+  const B = boxes(W, H), names = ['笔记本', '台式机', '手机', '云端巢穴'];
+  const ink = cssv('--ink'), muted = cssv('--muted'), rule = cssv('--axis'), faint = cssv('--faint');
+  ctx.font = `${Math.max(11, W * 0.022)}px ${cssv('--body')}`; ctx.textBaseline = 'top';
+  B.forEach((b, i) => {
+    const on = i === 3 || D.online_dev[i][t] === '1';
+    ctx.fillStyle = on ? faint : 'transparent'; ctx.strokeStyle = rule; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(b.x, b.y, b.w, b.h, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = on ? ink : muted; ctx.textAlign = 'left';
+    ctx.fillText(names[i] + (on ? '' : ' · 关机'), b.x + 10, b.y + 8);
+    if (i < 3 && on){
+      const n = Math.min(60, Math.round(D.mess_dev[i][hr] / 6));
+      ctx.fillStyle = cssv(LOCV[i]); ctx.globalAlpha = 0.55;
+      for (let j = 0; j < n; j++){ ctx.beginPath(); ctx.arc(b.x + 12 + hash(j + i * 97) * (b.w - 24), b.y + b.h * 0.35 + hash(j * 3 + i * 13) * (b.h * 0.58), 2.2, 0, Math.PI * 2); ctx.fill(); }
+      ctx.globalAlpha = 1;
+      if (D.user_dev[i][t] === '1'){ const cx = b.x + b.w - 22, cy = b.y + 10; ctx.fillStyle = ink; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy + 14); ctx.lineTo(cx + 4, cy + 10); ctx.lineTo(cx + 9, cy + 12); ctx.closePath(); ctx.fill(); }
+    }
+  });
+  // 目标位置
+  const code = +D.acto[t]; let loc = code <= 3 ? code : +D.acto_loc[t];
+  let target;
+  if (code === 4){
+    let j = t; while (j < T - 1 && D.acto[j] === '4') j++;
+    const to = +D.acto_loc[j] <= 3 ? +D.acto_loc[j] : 3;
+    let i0 = t; while (i0 > 0 && D.acto[i0] === '4') i0--;
+    const from = +D.acto_loc[i0], f = (t - i0) / Math.max(1, j - i0);
+    const c0 = B[from], c1 = B[to];
+    target = {x: c0.x + c0.w / 2 + (c1.x + c1.w / 2 - c0.x - c0.w / 2) * f, y: c0.y + c0.h * .62 + (c1.y + c1.h * .62 - c0.y - c0.h * .62) * f - Math.sin(f * Math.PI) * H * 0.08};
+  } else {
+    const b = B[loc]; target = {x: b.x + b.w / 2 + Math.sin(t / 37) * b.w * 0.18, y: b.y + b.h * 0.62 + Math.cos(t / 23) * b.h * 0.08};
+  }
+  if (!pos || !playing) pos = {...target}; else { pos.x += (target.x - pos.x) * 0.2; pos.y += (target.y - pos.y) * 0.2; }
+  const size = D.size[Math.min(hr, D.size.length - 1)], sp = D.speed_h[Math.min(hr, D.speed_h.length - 1)], hue = D.hue_h[Math.min(hr, D.hue_h.length - 1)];
+  const now = performance.now() / 1000;
+  if (code === 5){
+    ctx.fillStyle = ink; ctx.strokeStyle = cssv('--panel'); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  } else {
+    const r = W * 0.026 * size + 6;
+    ctx.fillStyle = `hsl(${hue.toFixed(0)} 55% ${cssv('--blobL')})`;
+    ctx.beginPath();
+    for (let a = 0; a <= 32; a++){
+      const th = a / 32 * Math.PI * 2, wob = 1 + 0.09 * Math.sin(th * 3 + now * sp * 3) + 0.05 * Math.sin(th * 5 - now * sp * 2);
+      const x = pos.x + Math.cos(th) * r * wob, y = pos.y + Math.sin(th) * r * wob * 0.9;
+      a ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = ink; [-1, 1].forEach(s => { ctx.beginPath(); ctx.arc(pos.x + s * r * 0.3, pos.y - r * 0.15, Math.max(1.6, r * 0.09), 0, Math.PI * 2); ctx.fill(); });
+  }
+  if (hour < 7 || hour >= 23){ ctx.fillStyle = cssv('--night'); ctx.fillRect(0, 0, W, H); }
+  const stc = D.acto_state[t], E = D.energy.C1[Math.min(hr, HOURS - 1)];
+  cap.textContent = `${dayLabel(t)} ${hhmm(t)} · ${LOC[code === 5 ? 5 : code]}${code === 5 ? '（在' + LOC[+D.acto_loc[t]] + '）' : ''} · ${stateName(stc)} · 能量 ${pct(E)}`;
+  if (document.activeElement !== scrub) scrub.value = t;
+}
+function loop(ts){
+  if (playing){ tick += (ts - last) / 1000 * TPS; if (tick >= T) tick = 0; }
+  last = ts; frame(); requestAnimationFrame(loop);
+}
+btn.textContent = playing ? '暂停' : '播放';
+btn.addEventListener('click', () => { playing = !playing; btn.textContent = playing ? '暂停' : '播放'; last = performance.now(); });
+scrub.addEventListener('input', () => { tick = +scrub.value; pos = null; });
+requestAnimationFrame(ts => { last = ts; loop(ts); });
+})();
+</script>
